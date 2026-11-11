@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Corrugated Box Designer</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f2f6fa;color:#182536;font-family:Arial,sans-serif}.wrap{max-width:1150px;margin:24px auto;padding:0 16px}.card{background:#fff;border:1px solid #d8e1eb;border-radius:14px;padding:18px;box-shadow:0 3px 12px #172b3d0b}h1{margin:0 0 6px;color:#15558b}.sub,.hint{color:#5b6877}.controls{display:grid;grid-template-columns:repeat(4,1fr) auto;gap:12px;align-items:end}label{display:block;font-weight:bold;font-size:13px;margin-bottom:6px}input,select,button{width:100%;height:42px;border:1px solid #bdc9d6;border-radius:8px;padding:8px;font-size:15px;background:white}button{background:#15558b;color:white;border:0;font-weight:bold;cursor:pointer;padding:8px 16px}button:hover{background:#0e416c}.hint{font-size:12px;line-height:1.45}.summary{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0}.chip{background:#dceeff;border:1px solid #b8d8f5;color:#123f68;padding:8px 12px;border-radius:999px;font-size:13px;font-weight:bold}.svgbox{overflow:auto;border:1px solid #d8e1eb;border-radius:10px;padding:8px}svg{display:block;width:100%;min-width:720px;height:auto}.legend{font-size:13px;color:#5b6877;margin:10px 0}.sw{display:inline-block;width:30px;border-top:3px solid #111;vertical-align:middle;margin:0 6px 0 16px}.dash{border-color:#155b9b;border-top-style:dashed}.note{background:#fff8e8;border:1px solid #f1d79a;border-radius:10px;padding:12px;margin-top:14px;font-size:13px;line-height:1.5}.steps{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-top:16px}.step{border:1px solid #dbe3eb;border-radius:10px;padding:12px;background:#fbfdff;font-size:13px;line-height:1.4}.step b{display:block;color:#15558b;margin-bottom:5px}@media(max-width:800px){.controls{grid-template-columns:repeat(2,1fr)}.controls button{grid-column:1/-1}.steps{grid-template-columns:1fr 1fr}}@media(max-width:480px){.steps{grid-template-columns:1fr}}@media print{body{background:white}.wrap{margin:0;max-width:none;padding:0}.controls,.hint,.note,.steps,.sub{display:none!important}.card{border:0;box-shadow:none}.svgbox{border:0;overflow:visible}svg{min-width:0;width:100%}}
+</style></head><body><main class="wrap"><section class="card">
+<h1>Corrugated Box Designer</h1><p class="sub">Enter your required internal box dimensions and generate a cutting diagram.</p>
+<div class="controls">
+<div><label for="length">Length (L)</label><input id="length" type="number" min=".1" step=".1" value="11"></div>
+<div><label for="width">Width (W)</label><input id="width" type="number" min=".1" step=".1" value="5"></div>
+<div><label for="height">Height (H)</label><input id="height" type="number" min=".1" step=".1" value="5"></div>
+<div><label for="unit">Unit</label><select id="unit"><option value="in">Inches</option><option value="cm">Centimetres</option><option value="mm">Millimetres</option></select></div>
+<button id="generate">Generate diagram</button></div>
+<p class="hint">Layout formula matching your tested design: four panels W + L + W + L; 1-inch joining tab (converted to selected unit); top and bottom flaps each H ÷ 2.</p>
+<div class="summary" id="summary"></div><h2 style="font-size:18px">Flat cutting template</h2>
+<div class="svgbox"><svg id="template" viewBox="0 0 1100 520" role="img" aria-label="Dynamic box cutting diagram"></svg></div>
+
+<h2 style="font-size:18px;margin-top:22px">Finished box preview (3D)</h2>
+<div class="svgbox"><svg id="preview" viewBox="0 0 760 390" role="img" aria-label="3D preview of finished corrugated box"></svg></div>
+<p class="hint">The preview shows the assembled box shape using your entered length, width and height. It is a proportional illustration, not a manufacturing drawing.</p>
+<div class="legend"><span class="sw"></span>Cut line <span class="sw dash"></span>Score / fold line</div>
+<div class="note" id="warning"></div>
+<div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:14px"><button onclick="window.print()">Print diagram</button><button id="reset" style="background:#596879">Reset example (11 × 5 × 5)</button></div>
+<div class="steps">
+<div class="step"><b>1. Measure & cut</b>Cut one blank to the overall sheet dimensions shown.</div>
+<div class="step"><b>2. Score folds</b>Score dashed lines gently; do not cut through the liners.</div>
+<div class="step"><b>3. Form the tube</b>Fold four body panels and overlap the joining tab.</div>
+<div class="step"><b>4. Close bottom</b>Fold the bottom flaps and seal the centre seam and edges.</div>
+<div class="step"><b>5. Pack & seal</b>Add cushioning, close the top and use H-taping.</div></div>
+</section></main>
+<script>
+(()=>{
+const $=id=>document.getElementById(id),fmt=n=>Number(n.toFixed(2)).toString();
+function render(){
+ const L=+$('length').value,W=+$('width').value,H=+$('height').value,u=$('unit').value;
+ if(![L,W,H].every(v=>Number.isFinite(v)&&v>0)){$('warning').textContent='Enter positive numbers for all dimensions.';$('template').innerHTML='';$('summary').innerHTML='';return}
+ const tab=u==='in'?1:u==='cm'?2.54:25.4,flap=H/2,bw=2*L+2*W+tab,bh=2*H;
+ $('summary').innerHTML=[`Internal target: ${fmt(L)} × ${fmt(W)} × ${fmt(H)} ${u}`,`Blank size: ${fmt(bw)} × ${fmt(bh)} ${u}`,`Glue tab: ${fmt(tab)} ${u}`,`Flap depth: ${fmt(flap)} ${u}`].map(x=>`<span class="chip">${x}</span>`).join('');
+ const svg=$('template'),NS='http://www.w3.org/2000/svg';svg.innerHTML='';
+ const add=(tag,a,t)=>{let e=document.createElementNS(NS,tag);Object.entries(a||{}).forEach(([k,v])=>e.setAttribute(k,v));if(t!==undefined)e.textContent=t;svg.appendChild(e);return e};
+ const scale=Math.min(940/bw,350/bh),s=v=>v*scale,x0=80,y0=105;
+ const bodyTop=y0+s(flap),bodyBottom=bodyTop+s(H),widths=[W,L,W,L],xs=[x0];
+ widths.forEach(v=>xs.push(xs[xs.length-1]+s(v)));
+ const bodyRight=xs[4],end=bodyRight+s(tab),fill='#eab86f';
+ for(let i=0;i<4;i++){
+  let l=xs[i],r=xs[i+1],inset=Math.min(18,(r-l)*.12),mid=(l+r)/2;
+  add('polygon',{points:`${l},${bodyTop} ${l+inset},${y0} ${r-inset},${y0} ${r},${bodyTop}`,fill,stroke:'#20252b','stroke-width':2});
+  add('polygon',{points:`${l},${bodyBottom} ${l+inset},${bodyBottom+s(flap)} ${r-inset},${bodyBottom+s(flap)} ${r},${bodyBottom}`,fill,stroke:'#20252b','stroke-width':2});
+  add('text',{x:mid,y:y0+s(flap)*.58,'text-anchor':'middle','font-size':16,'font-weight':'bold'},`${fmt(flap)} ${u}`);
+  add('text',{x:mid,y:bodyBottom+s(flap)*.58,'text-anchor':'middle','font-size':16,'font-weight':'bold'},`${fmt(flap)} ${u}`);
+ }
+ add('rect',{x:x0,y:bodyTop,width:s(2*L+2*W),height:s(H),fill,stroke:'#20252b','stroke-width':2});
+ add('polygon',{points:`${bodyRight},${bodyTop} ${end},${bodyTop+s(H*.12)} ${end},${bodyBottom-s(H*.12)} ${bodyRight},${bodyBottom}`,fill,stroke:'#20252b','stroke-width':2});
+ [xs[1],xs[2],xs[3],bodyRight].forEach(x=>add('line',{x1:x,y1:bodyTop,x2:x,y2:bodyBottom,stroke:'#155b9b','stroke-width':2,'stroke-dasharray':'8 6'}));
+ [bodyTop,bodyBottom].forEach(y=>add('line',{x1:x0,y1:y,x2:bodyRight,y2:y,stroke:'#155b9b','stroke-width':2,'stroke-dasharray':'8 6'}));
+ widths.forEach((v,i)=>{let mid=(xs[i]+xs[i+1])/2;add('text',{x:mid,y:bodyTop+s(H)*.48,'text-anchor':'middle','font-size':20,'font-weight':'bold'},`${fmt(v)} ${u}`);add('text',{x:mid,y:bodyTop+s(H)*.68,'text-anchor':'middle','font-size':14},i%2===0?'(W)':'(L)')});
+ add('text',{x:bodyRight+s(tab)/2,y:bodyTop+s(H)*.48,'text-anchor':'middle','font-size':Math.max(9,Math.min(14,s(tab)*.55)),'font-weight':'bold'},'GLUE');
+ add('text',{x:bodyRight+s(tab)/2,y:bodyTop+s(H)*.67,'text-anchor':'middle','font-size':Math.max(9,Math.min(13,s(tab)*.5))},`${fmt(tab)} ${u}`);
+ const labelY=58;add('line',{x1:x0,y1:labelY,x2:end,y2:labelY,stroke:'#124f9b','stroke-width':2});
+ add('path',{d:`M${x0},${labelY} l10,-5 v10 z M${end},${labelY} l-10,-5 v10 z`,fill:'#124f9b'});
+ add('text',{x:(x0+end)/2,y:labelY-12,'text-anchor':'middle','font-size':19,'font-weight':'bold',fill:'#124f9b'},`Overall width: ${fmt(bw)} ${u}`);
+ const midY=(y0+bodyBottom+s(flap))/2;add('text',{x:28,y:midY,'text-anchor':'middle','font-size':17,'font-weight':'bold',fill:'#124f9b',transform:`rotate(-90 28 ${midY})`},`Overall height: ${fmt(bh)} ${u}`);
+ add('text',{x:x0,y:490,'font-size':13,fill:'#4b5968'},'Blue dashed = score / fold  •  Black outline = cut profile');
+
+ // Draw a proportional isometric view of the assembled box.
+ const pv=$('preview'); pv.innerHTML='';
+ const addp=(tag,a,t)=>{let e=document.createElementNS(NS,tag);Object.entries(a||{}).forEach(([k,v])=>e.setAttribute(k,v));if(t!==undefined)e.textContent=t;pv.appendChild(e);return e};
+ const T=28,B=296,LM=64,RM=118;
+ const availW=760-LM-RM,availH=B-T;
+ const k=Math.min(availW/(L+W*.62),availH/(H+W*.38));
+ const a=L*k, b=W*k, h=H*k, dx=b*.62, dy=b*.38;
+ const ox=LM+(availW-(a+dx))/2, oy=T+(availH-(h+dy))/2+h+dy;
+ const frontTopLeft=[ox,oy-h], frontTopRight=[ox+a,oy-h];
+ const frontBottomRight=[ox+a,oy], frontBottomLeft=[ox,oy];
+ const backTopLeft=[ox+dx,oy-h-dy], backTopRight=[ox+a+dx,oy-h-dy];
+ const backBottomRight=[ox+a+dx,oy-dy];
+ const pts=q=>q.map(v=>v.join(',')).join(' ');
+ addp('polygon',{points:pts([frontTopLeft,frontTopRight,backTopRight,backTopLeft]),fill:'#f4cc91',stroke:'#69451f','stroke-width':2});
+ addp('polygon',{points:pts([frontTopRight,backTopRight,backBottomRight,frontBottomRight]),fill:'#c58b4b',stroke:'#69451f','stroke-width':2});
+ addp('polygon',{points:pts([frontTopLeft,frontTopRight,frontBottomRight,frontBottomLeft]),fill:'#dfa75f',stroke:'#69451f','stroke-width':2});
+ // top seam and tape strip
+ addp('line',{x1:ox+dx*.48,y1:oy-h-dy*.48,x2:ox+a+dx*.48,y2:oy-h-dy*.48,stroke:'#f7e0b8','stroke-width':Math.max(5,b*.07),opacity:.9});
+ addp('text',{x:ox+a/2,y:oy+28,'text-anchor':'middle','font-size':17,'font-weight':'bold',fill:'#243447'},`${fmt(L)} ${u} (L)`);
+ addp('text',{x:ox+a+dx+18,y:oy-h/2-dy/2,'font-size':16,'font-weight':'bold',fill:'#243447'},`${fmt(W)} ${u} (W)`);
+ addp('text',{x:ox-14,y:oy-h/2,'text-anchor':'end','font-size':16,'font-weight':'bold',fill:'#243447'},`${fmt(H)} ${u} (H)`);
+ addp('text',{x:380,y:365,'text-anchor':'middle','font-size':14,fill:'#526273'},'Assembled box — proportional 3D view');
+
+ $('warning').textContent='Prototype note: this uses the same simplified layout rule as your tested 11 × 5 × 5 inch box. Cardboard thickness, flute direction, scoring and fold compression can affect final inside dimensions. Make one sample and measure it before batch production.';
+}
+$('generate').addEventListener('click',render);$('reset').addEventListener('click',()=>{$('length').value=11;$('width').value=5;$('height').value=5;$('unit').value='in';render()});
+['length','width','height','unit'].forEach(id=>$(id).addEventListener('change',render));render();
+})();
+</script></body></html>
