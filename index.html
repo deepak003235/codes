@@ -11,7 +11,7 @@
 <div><label for="height">Height (H)</label><input id="height" type="number" min=".1" step=".1" value="5"></div>
 <div><label for="unit">Unit</label><select id="unit"><option value="in">Inches</option><option value="cm">Centimetres</option><option value="mm">Millimetres</option></select></div>
 <button id="generate">Generate diagram</button></div>
-<p class="hint">Layout formula matching your tested design: four panels W + L + W + L; 1-inch joining tab (converted to selected unit); top and bottom flaps each H ÷ 2.</p>
+<p class="hint">Regular slotted container layout: four panels W + L + W + L; 1-inch joining tab (converted to selected unit); top and bottom flaps each W ÷ 2 so they meet at the centre.</p>
 <div class="summary" id="summary"></div><h2 style="font-size:18px">Flat cutting template</h2>
 <div class="svgbox"><svg id="template" viewBox="0 0 1100 520" role="img" aria-label="Dynamic box cutting diagram"></svg></div>
 
@@ -34,7 +34,7 @@ const $=id=>document.getElementById(id),fmt=n=>Number(n.toFixed(2)).toString();
 function render(){
  const L=+$('length').value,W=+$('width').value,H=+$('height').value,u=$('unit').value;
  if(![L,W,H].every(v=>Number.isFinite(v)&&v>0)){$('warning').textContent='Enter positive numbers for all dimensions.';$('template').innerHTML='';$('summary').innerHTML='';return}
- const tab=u==='in'?1:u==='cm'?2.54:25.4,flap=H/2,bw=2*L+2*W+tab,bh=2*H;
+ const tab=u==='in'?1:u==='cm'?2.54:25.4,flap=W/2,bw=2*L+2*W+tab,bh=H+W;
  $('summary').innerHTML=[`Internal target: ${fmt(L)} × ${fmt(W)} × ${fmt(H)} ${u}`,`Blank size: ${fmt(bw)} × ${fmt(bh)} ${u}`,`Glue tab: ${fmt(tab)} ${u}`,`Flap depth: ${fmt(flap)} ${u}`].map(x=>`<span class="chip">${x}</span>`).join('');
  const svg=$('template'),NS='http://www.w3.org/2000/svg';svg.innerHTML='';
  const add=(tag,a,t)=>{let e=document.createElementNS(NS,tag);Object.entries(a||{}).forEach(([k,v])=>e.setAttribute(k,v));if(t!==undefined)e.textContent=t;svg.appendChild(e);return e};
